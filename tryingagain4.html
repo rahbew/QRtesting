@@ -37,20 +37,44 @@
             return "Unknown Area"; // Default if no match is found
         }
 
-        // Function to read the uploaded Excel file
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = e.target.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
+        // Function to display the data in the table
+        function displayData() {
+            const table = document.getElementById("data-table");
+            table.innerHTML = ""; // Clear the table
 
-                // Assuming the first sheet contains the data
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                existingData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                console.log("Existing Data:", existingData);
-            };
-            reader.readAsBinaryString(file);
+            // Add table headers
+            const headerRow = table.insertRow();
+            ["Product Number", "Serial Number", "Product Name", "Timestamp", "Latitude", "Longitude", "Region"].forEach(header => {
+                const th = document.createElement("th");
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            // Add existing data
+            existingData.forEach(row => {
+                const tr = table.insertRow();
+                row.forEach(cell => {
+                    const td = tr.insertCell();
+                    td.textContent = cell;
+                });
+            });
+
+            // Add new product details
+            if (productDetails) {
+                const newRow = table.insertRow();
+                [
+                    productDetails.ProductNumber,
+                    productDetails.SerialNumber,
+                    productDetails.ProductName,
+                    productDetails.Timestamp,
+                    productDetails.Latitude,
+                    productDetails.Longitude,
+                    productDetails.Region
+                ].forEach(value => {
+                    const td = newRow.insertCell();
+                    td.textContent = value;
+                });
+            }
         }
 
         // Function to extract product details from the URL and update the table
@@ -71,55 +95,8 @@
             // Determine the region based on latitude and longitude
             productDetails.Region = findRegionName(productDetails.Latitude, productDetails.Longitude);
 
-            // Display the product details in a table
-            document.getElementById("details-info").innerHTML = `
-                <table border="1">
-                    <tr>
-                        <th>Product Number</th>
-                        <th>Serial Number</th>
-                        <th>Product Name</th>
-                        <th>Timestamp</th>
-                    </tr>
-                    <tr>
-                        <td>${productDetails.ProductNumber}</td>
-                        <td>${productDetails.SerialNumber}</td>
-                        <td>${productDetails.ProductName}</td>
-                        <td>${productDetails.Timestamp}</td>
-                    </tr>
-                </table>
-            `;
-        }
-
-        // Function to add new data (e.g., from geolocation and timestamp)
-        function addNewData() {
-            // Add the new row with product details
-            const newRow = [
-                productDetails.ProductNumber,
-                productDetails.SerialNumber,
-                productDetails.ProductName,
-                productDetails.Latitude,
-                productDetails.Longitude,
-                productDetails.Region,
-                productDetails.Timestamp
-            ];
-
-            existingData.push(newRow); // Add the new data to existing data
-            console.log("Updated Data:", existingData);
-        }
-
-        // Function to export the updated data to an Excel file
-        function exportToExcel() {
-            const worksheetData = [
-                ["Product Number", "Serial Number", "Product Name", "Latitude", "Longitude", "Region", "Timestamp"],
-                ...existingData.map(row => row)
-            ];
-
-            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Updated Product Data");
-
-            // Export the updated Excel file
-            XLSX.writeFile(workbook, "UpdatedProductData.xlsx");
+            // Display the updated data
+            displayData();
         }
 
         // Function to get geolocation details
@@ -138,10 +115,7 @@
                         productDetails.Region = findRegionName(latitude, longitude);
 
                         // Display the geolocation info on the page
-                        addNewData();
-
-                        // Export the updated Excel file automatically after getting geolocation data
-                        exportToExcel();
+                        displayData();
                     },
                     (error) => {
                         console.error("Geolocation Error:", error);
@@ -158,13 +132,13 @@
             // Extract product details from the URL
             extractProductDetailsFromURL();
 
-            // Prompt for geolocation and update the Excel file
+            // Prompt for geolocation and update the data
             getLocation();
         };
     </script>
 </head>
 <body>
     <h1>Demo Centre Inventory</h1>
-    <div id="details-info"></div>
+    <table id="data-table" border="1"></table>
 </body>
 </html>
