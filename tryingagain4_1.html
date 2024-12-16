@@ -3,20 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Inventory</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Inventory</title>
     <script>
-        let existingData = []; // Array to store the existing data from the Excel file
-        let productDetails = {}; // Object to store the current product details
-
-        // Fixed product details
         const productDetailsFixed = {
-            ProductNumber: 1111,  // Product Number
-            SerialNumber: 2222,   // Serial Number
-            ProductName: "QQQQ",  // Fixed Product Name
+            ProductNumber: 5678,
+            SerialNumber: 1111,
+            ProductName: "QQQQ",
         };
 
-        // Region mapping table
         const regionMappings = [
             { name: "Dresden, Germany", latRange: [50.0, 52.0], lonRange: [12.0, 14.5] },
             { name: "Woodlands, Singapore", latRange: [1.2, 1.6], lonRange: [103.5, 104.0] },
@@ -24,102 +18,73 @@
             { name: "Taiwan", latRange: [22.0, 26.0], lonRange: [119.0, 123.0] }
         ];
 
-        // Function to find the region name based on latitude and longitude
         function findRegionName(latitude, longitude) {
             for (const region of regionMappings) {
                 if (
-                    latitude >= region.latRange[0] && latitude <= region.latRange[1] &&
-                    longitude >= region.lonRange[0] && longitude <= region.lonRange[1]
+                    latitude >= region.latRange[0] &&
+                    latitude <= region.latRange[1] &&
+                    longitude >= region.lonRange[0] &&
+                    longitude <= region.lonRange[1]
                 ) {
                     return region.name;
                 }
             }
-            return "Unknown Area"; // Default if no match is found
+            return "Unknown Area";
         }
 
-        // Function to display the data in the table
-        function displayData() {
-            const table = document.getElementById("data-table");
-            table.innerHTML = ""; // Clear the table
-
-            // Add table headers
-            const headerRow = table.insertRow();
-            ["Product Number", "Serial Number", "Product Name", "Timestamp", "Latitude", "Longitude", "Region"].forEach(header => {
-                const th = document.createElement("th");
-                th.textContent = header;
-                headerRow.appendChild(th);
-            });
-
-            // Add existing data
-            existingData.forEach(row => {
-                const tr = table.insertRow();
-                row.forEach(cell => {
-                    const td = tr.insertCell();
-                    td.textContent = cell;
-                });
-            });
-
-            // Add new product details
-            if (productDetails) {
-                const newRow = table.insertRow();
-                [
-                    productDetails.ProductNumber,
-                    productDetails.SerialNumber,
-                    productDetails.ProductName,
-                    productDetails.Timestamp,
-                    productDetails.Latitude,
-                    productDetails.Longitude,
-                    productDetails.Region
-                ].forEach(value => {
-                    const td = newRow.insertCell();
-                    td.textContent = value;
-                });
-            }
+        function displayData(productDetails) {
+            document.body.innerHTML = `
+                <h1>QQQQ</h1>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Product Number</th>
+                            <th>Serial Number</th>
+                            <th>Product Name</th>
+                            <th>Timestamp</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Region</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${productDetails.ProductNumber}</td>
+                            <td>${productDetails.SerialNumber}</td>
+                            <td>${productDetails.ProductName}</td>
+                            <td>${productDetails.Timestamp}</td>
+                            <td>${productDetails.Latitude ? productDetails.Latitude.toFixed(4) : "N/A"}</td>
+                            <td>${productDetails.Longitude ? productDetails.Longitude.toFixed(4) : "N/A"}</td>
+                            <td>${productDetails.Region || "N/A"}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
         }
 
-        // Function to extract product details from the URL and update the table
-        function extractProductDetailsFromURL() {
-            const params = new URLSearchParams(window.location.search);
-
-            // Extract product details from the URL query parameters
-            productDetails = {
-                ProductNumber: productDetailsFixed.ProductNumber,
-                SerialNumber: productDetailsFixed.SerialNumber,
-                ProductName: productDetailsFixed.ProductName,
-                Latitude: parseFloat(params.get("Latitude")) || 0,
-                Longitude: parseFloat(params.get("Longitude")) || 0,
-                Region: "Unknown Area",
-                Timestamp: params.get("Timestamp") || new Date().toISOString(),
-            };
-
-            // Determine the region based on latitude and longitude
-            productDetails.Region = findRegionName(productDetails.Latitude, productDetails.Longitude);
-
-            // Display the updated data
-            displayData();
-        }
-
-        // Function to get geolocation details
-        function getLocation() {
+        function fetchAndRedirectWithGeolocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
-                        const timestamp = new Date().toISOString(); // ISO 8601 timestamp
+                        const timestamp = new Date().toISOString();
+                        const region = findRegionName(latitude, longitude);
 
-                        // Update geolocation and add the data
-                        productDetails.Latitude = latitude;
-                        productDetails.Longitude = longitude;
-                        productDetails.Timestamp = timestamp;
-                        productDetails.Region = findRegionName(latitude, longitude);
-
-                        // Display the geolocation info on the page
-                        displayData();
+                        // Redirect with geolocation data in the URL
+                        const urlParams = new URLSearchParams({
+                            ProductNumber: productDetailsFixed.ProductNumber,
+                            SerialNumber: productDetailsFixed.SerialNumber,
+                            ProductName: productDetailsFixed.ProductName,
+                            Timestamp: timestamp,
+                            Latitude: latitude,
+                            Longitude: longitude,
+                            Region: region
+                        });
+                        window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
                     },
                     (error) => {
-                        console.error("Geolocation Error:", error);
-                        alert("Unable to retrieve your location. Please check your permissions.");
+                        alert("Unable to fetch geolocation data. Please enable GPS and refresh the page.");
                     }
                 );
             } else {
@@ -127,18 +92,30 @@
             }
         }
 
-        // Automatically run on page load
-        window.onload = function() {
-            // Extract product details from the URL
-            extractProductDetailsFromURL();
+        function initializePage() {
+            const urlParams = new URLSearchParams(window.location.search);
 
-            // Prompt for geolocation and update the data
-            getLocation();
-        };
+            if (urlParams.has("Latitude") && urlParams.has("Longitude")) {
+                // Display data if geolocation is already in the URL
+                const productDetails = {
+                    ProductNumber: urlParams.get("ProductNumber"),
+                    SerialNumber: urlParams.get("SerialNumber"),
+                    ProductName: urlParams.get("ProductName"),
+                    Timestamp: urlParams.get("Timestamp"),
+                    Latitude: parseFloat(urlParams.get("Latitude")),
+                    Longitude: parseFloat(urlParams.get("Longitude")),
+                    Region: urlParams.get("Region")
+                };
+                displayData(productDetails);
+            } else {
+                // Fetch geolocation and redirect
+                fetchAndRedirectWithGeolocation();
+            }
+        }
+
+        window.onload = initializePage;
     </script>
 </head>
 <body>
-    <h1>QQQQ</h1>
-    <table id="data-table" border="1"></table>
 </body>
 </html>
