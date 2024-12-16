@@ -3,20 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Inventory</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Inventory</title>
     <script>
-        let existingData = []; // Array to store the existing data from the Excel file
-        let productDetails = {}; // Object to store the current product details
-
-        // Fixed product details
         const productDetailsFixed = {
-            ProductNumber: 1234,  // Product Number
-            SerialNumber: 1222,   // Serial Number
-            ProductName: "ASDF",  // Fixed Product Name
+            ProductNumber: 1234,
+            SerialNumber: 1222,
+            ProductName: "ASDF",
         };
 
-        // Region mapping table
         const regionMappings = [
             { name: "Dresden, Germany", latRange: [50.0, 52.0], lonRange: [12.0, 14.5] },
             { name: "Woodlands, Singapore", latRange: [1.2, 1.6], lonRange: [103.5, 104.0] },
@@ -24,7 +18,6 @@
             { name: "Taiwan", latRange: [22.0, 26.0], lonRange: [119.0, 123.0] }
         ];
 
-        // Function to find the region name based on latitude and longitude
         function findRegionName(latitude, longitude) {
             for (const region of regionMappings) {
                 if (
@@ -34,92 +27,61 @@
                     return region.name;
                 }
             }
-            return "Unknown Area"; // Default if no match is found
+            return "Unknown Area";
         }
 
-        // Function to display the data in the table
-        function displayData() {
-            const table = document.getElementById("data-table");
-            table.innerHTML = ""; // Clear the table
-
-            // Add table headers
-            const headerRow = table.insertRow();
-            ["Product Number", "Serial Number", "Product Name", "Timestamp", "Latitude", "Longitude", "Region"].forEach(header => {
-                const th = document.createElement("th");
-                th.textContent = header;
-                headerRow.appendChild(th);
-            });
-
-            // Add existing data
-            existingData.forEach(row => {
-                const tr = table.insertRow();
-                row.forEach(cell => {
-                    const td = tr.insertCell();
-                    td.textContent = cell;
-                });
-            });
-
-            // Add new product details
-            if (productDetails) {
-                const newRow = table.insertRow();
-                [
-                    productDetails.ProductNumber,
-                    productDetails.SerialNumber,
-                    productDetails.ProductName,
-                    productDetails.Timestamp,
-                    productDetails.Latitude,
-                    productDetails.Longitude,
-                    productDetails.Region
-                ].forEach(value => {
-                    const td = newRow.insertCell();
-                    td.textContent = value;
-                });
-            }
+        function displayPage1() {
+            document.body.innerHTML = `
+                <h1>ASDF</h1>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Product Number</th>
+                            <th>Serial Number</th>
+                            <th>Product Name</th>
+                            <th>Timestamp</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Region</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${productDetailsFixed.ProductNumber}</td>
+                            <td>${productDetailsFixed.SerialNumber}</td>
+                            <td>${productDetailsFixed.ProductName}</td>
+                            <td>${new Date().toISOString()}</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button onclick="navigateToPage2()">Next</button>
+            `;
         }
 
-        // Function to extract product details from the URL and update the table
-        function extractProductDetailsFromURL() {
-            const params = new URLSearchParams(window.location.search);
-
-            // Extract product details from the URL query parameters
-            productDetails = {
-                ProductNumber: productDetailsFixed.ProductNumber,
-                SerialNumber: productDetailsFixed.SerialNumber,
-                ProductName: productDetailsFixed.ProductName,
-                Latitude: parseFloat(params.get("Latitude")) || 0,
-                Longitude: parseFloat(params.get("Longitude")) || 0,
-                Region: "Unknown Area",
-                Timestamp: params.get("Timestamp") || new Date().toISOString(),
-            };
-
-            // Determine the region based on latitude and longitude
-            productDetails.Region = findRegionName(productDetails.Latitude, productDetails.Longitude);
-
-            // Display the updated data
-            displayData();
-        }
-
-        // Function to get geolocation details
-        function getLocation() {
+        function navigateToPage2() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
-                        const timestamp = new Date().toISOString(); // ISO 8601 timestamp
+                        const timestamp = new Date().toISOString();
+                        const region = findRegionName(latitude, longitude);
 
-                        // Update geolocation and add the data
-                        productDetails.Latitude = latitude;
-                        productDetails.Longitude = longitude;
-                        productDetails.Timestamp = timestamp;
-                        productDetails.Region = findRegionName(latitude, longitude);
-
-                        // Display the geolocation info on the page
-                        displayData();
+                        displayPage2({
+                            ProductNumber: productDetailsFixed.ProductNumber,
+                            SerialNumber: productDetailsFixed.SerialNumber,
+                            ProductName: productDetailsFixed.ProductName,
+                            Timestamp: timestamp,
+                            Latitude: latitude,
+                            Longitude: longitude,
+                            Region: region
+                        });
                     },
                     (error) => {
-                        console.error("Geolocation Error:", error);
-                        alert("Unable to retrieve your location. Please check your permissions.");
+                        alert("Unable to retrieve geolocation. Please enable location permissions and try again.");
                     }
                 );
             } else {
@@ -127,18 +89,39 @@
             }
         }
 
-        // Automatically run on page load
-        window.onload = function() {
-            // Extract product details from the URL
-            extractProductDetailsFromURL();
+        function displayPage2(productDetails) {
+            document.body.innerHTML = `
+                <h1>ASDF</h1>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Product Number</th>
+                            <th>Serial Number</th>
+                            <th>Product Name</th>
+                            <th>Timestamp</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Region</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${productDetails.ProductNumber}</td>
+                            <td>${productDetails.SerialNumber}</td>
+                            <td>${productDetails.ProductName}</td>
+                            <td>${productDetails.Timestamp}</td>
+                            <td>${productDetails.Latitude.toFixed(4)}</td>
+                            <td>${productDetails.Longitude.toFixed(4)}</td>
+                            <td>${productDetails.Region}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
 
-            // Prompt for geolocation and update the data
-            getLocation();
-        };
+        window.onload = displayPage1;
     </script>
 </head>
 <body>
-    <h1>ASDF</h1>
-    <table id="data-table" border="1"></table>
 </body>
 </html>
