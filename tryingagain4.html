@@ -21,8 +21,10 @@
         function findRegionName(latitude, longitude) {
             for (const region of regionMappings) {
                 if (
-                    latitude >= region.latRange[0] && latitude <= region.latRange[1] &&
-                    longitude >= region.lonRange[0] && longitude <= region.lonRange[1]
+                    latitude >= region.latRange[0] &&
+                    latitude <= region.latRange[1] &&
+                    longitude >= region.lonRange[0] &&
+                    longitude <= region.lonRange[1]
                 ) {
                     return region.name;
                 }
@@ -30,66 +32,7 @@
             return "Unknown Area";
         }
 
-        function displayPage1() {
-            document.body.innerHTML = `
-                <h1>ASDF</h1>
-                <table border="1">
-                    <thead>
-                        <tr>
-                            <th>Product Number</th>
-                            <th>Serial Number</th>
-                            <th>Product Name</th>
-                            <th>Timestamp</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Region</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>${productDetailsFixed.ProductNumber}</td>
-                            <td>${productDetailsFixed.SerialNumber}</td>
-                            <td>${productDetailsFixed.ProductName}</td>
-                            <td>${new Date().toISOString()}</td>
-                            <td>N/A</td>
-                            <td>N/A</td>
-                            <td>N/A</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button onclick="navigateToPage2()">Next</button>
-            `;
-        }
-
-        function navigateToPage2() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-                        const timestamp = new Date().toISOString();
-                        const region = findRegionName(latitude, longitude);
-
-                        displayPage2({
-                            ProductNumber: productDetailsFixed.ProductNumber,
-                            SerialNumber: productDetailsFixed.SerialNumber,
-                            ProductName: productDetailsFixed.ProductName,
-                            Timestamp: timestamp,
-                            Latitude: latitude,
-                            Longitude: longitude,
-                            Region: region
-                        });
-                    },
-                    (error) => {
-                        alert("Unable to retrieve geolocation. Please enable location permissions and try again.");
-                    }
-                );
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-
-        function displayPage2(productDetails) {
+        function displayData(productDetails) {
             document.body.innerHTML = `
                 <h1>ASDF</h1>
                 <table border="1">
@@ -110,16 +53,67 @@
                             <td>${productDetails.SerialNumber}</td>
                             <td>${productDetails.ProductName}</td>
                             <td>${productDetails.Timestamp}</td>
-                            <td>${productDetails.Latitude.toFixed(4)}</td>
-                            <td>${productDetails.Longitude.toFixed(4)}</td>
-                            <td>${productDetails.Region}</td>
+                            <td>${productDetails.Latitude ? productDetails.Latitude.toFixed(4) : "N/A"}</td>
+                            <td>${productDetails.Longitude ? productDetails.Longitude.toFixed(4) : "N/A"}</td>
+                            <td>${productDetails.Region || "N/A"}</td>
                         </tr>
                     </tbody>
                 </table>
             `;
         }
 
-        window.onload = displayPage1;
+        function fetchAndRedirectWithGeolocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const timestamp = new Date().toISOString();
+                        const region = findRegionName(latitude, longitude);
+
+                        // Redirect with geolocation data in the URL
+                        const urlParams = new URLSearchParams({
+                            ProductNumber: productDetailsFixed.ProductNumber,
+                            SerialNumber: productDetailsFixed.SerialNumber,
+                            ProductName: productDetailsFixed.ProductName,
+                            Timestamp: timestamp,
+                            Latitude: latitude,
+                            Longitude: longitude,
+                            Region: region
+                        });
+                        window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+                    },
+                    (error) => {
+                        alert("Unable to fetch geolocation data. Please enable GPS and refresh the page.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function initializePage() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.has("Latitude") && urlParams.has("Longitude")) {
+                // Display data if geolocation is already in the URL
+                const productDetails = {
+                    ProductNumber: urlParams.get("ProductNumber"),
+                    SerialNumber: urlParams.get("SerialNumber"),
+                    ProductName: urlParams.get("ProductName"),
+                    Timestamp: urlParams.get("Timestamp"),
+                    Latitude: parseFloat(urlParams.get("Latitude")),
+                    Longitude: parseFloat(urlParams.get("Longitude")),
+                    Region: urlParams.get("Region")
+                };
+                displayData(productDetails);
+            } else {
+                // Fetch geolocation and redirect
+                fetchAndRedirectWithGeolocation();
+            }
+        }
+
+        window.onload = initializePage;
     </script>
 </head>
 <body>
