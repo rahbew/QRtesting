@@ -18,7 +18,6 @@
 
         // Region mapping table
         const regionMappings = [
-            
             { name: "Dresden, Germany", latRange: [50.0, 52.0], lonRange: [12.0, 14.5] },
             { name: "Woodlands, Singapore", latRange: [1.2, 1.6], lonRange: [103.5, 104.0] },
             { name: "Beaverton, USA", latRange: [45.0, 46.0], lonRange: [-123.5, -122.0] },
@@ -72,16 +71,26 @@
             // Determine the region based on latitude and longitude
             productDetails.Region = findRegionName(productDetails.Latitude, productDetails.Longitude);
 
-            // Display the product details on the page
+            // Display the product details in a table
             document.getElementById("details-info").innerHTML = `
-                <h3>Product Details:</h3>
-                <p>Product Number: ${productDetails.ProductNumber}</p>
-                <p>Serial Number: ${productDetails.SerialNumber}</p>
-                <p>Product Name: ${productDetails.ProductName}</p>
-                
-                
-                
-                <p>Timestamp: ${productDetails.Timestamp}</p>
+                <table border="1">
+                    <tr>
+                        <th>Product Number</th>
+                        <td>${productDetails.ProductNumber}</td>
+                    </tr>
+                    <tr>
+                        <th>Serial Number</th>
+                        <td>${productDetails.SerialNumber}</td>
+                    </tr>
+                    <tr>
+                        <th>Product Name</th>
+                        <td>${productDetails.ProductName}</td>
+                    </tr>
+                    <tr>
+                        <th>Timestamp</th>
+                        <td>${productDetails.Timestamp}</td>
+                    </tr>
+                </table>
             `;
         }
 
