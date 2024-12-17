@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <script>
+        const productDetailsFixed = {
+            ProductNumber: 1234,
+            SerialNumber: 1222,
+            ProductName: "ASDF",
+        };
+
+        const regionMappings = [
+            { name: "Dresden, Germany", latRange: [50.0, 52.0], lonRange: [12.0, 14.5] },
+            { name: "Woodlands, Singapore", latRange: [1.2, 1.6], lonRange: [103.5, 104.0] },
+            { name: "Beaverton, USA", latRange: [45.0, 46.0], lonRange: [-123.5, -122.0] },
+            { name: "Taiwan", latRange: [22.0, 26.0], lonRange: [119.0, 123.0] }
+        ];
+
+        function findRegionName(latitude, longitude) {
+            for (const region of regionMappings) {
+                if (
+                    latitude >= region.latRange[0] &&
+                    latitude <= region.latRange[1] &&
+                    longitude >= region.lonRange[0] &&
+                    longitude <= region.lonRange[1]
+                ) {
+                    return region.name;
+                }
+            }
+            return "Unknown Area";
+        }
+
+        function returnDataAsJSON(productDetails) {
+            const data = {
+                ProductNumber: productDetails.ProductNumber,
+                SerialNumber: productDetails.SerialNumber,
+                ProductName: productDetails.ProductName,
+                Timestamp: productDetails.Timestamp,
+                Latitude: productDetails.Latitude || "N/A",
+                Longitude: productDetails.Longitude || "N/A",
+                Region: productDetails.Region || "N/A"
+            };
+            // Output as JSON
+            document.body.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        }
+
+        function fetchAndDisplayData() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const timestamp = new Date().toISOString();
+                        const region = findRegionName(latitude, longitude);
+
+                        // Prepare product data with dynamic geolocation and timestamp
+                        const productDetails = {
+                            ProductNumber: productDetailsFixed.ProductNumber,
+                            SerialNumber: productDetailsFixed.SerialNumber,
+                            ProductName: productDetailsFixed.ProductName,
+                            Timestamp: timestamp,
+                            Latitude: latitude,
+                            Longitude: longitude,
+                            Region: region
+                        };
+
+                        // Output as structured JSON for easy parsing
+                        returnDataAsJSON(productDetails);
+                    },
+                    (error) => {
+                        alert("Unable to fetch geolocation data. Please enable GPS and refresh the page.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function initializePage() {
+            fetchAndDisplayData();
+        }
+
+        window.onload = initializePage;
+    </script>
+</head>
+<body>
+</body>
+</html>
