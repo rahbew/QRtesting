@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geolocation Inventory Data</title>
+    <title>Send Data to Power Automate</title>
+</head>
+<body>
+    <h1>Data Processing...</h1>
     <script>
         const productDetails = {
             ProductNumber: "1234",
@@ -21,14 +24,12 @@
         function findRegion(lat, lon) {
             for (let region of regionMappings) {
                 if (lat >= region.latRange[0] && lat <= region.latRange[1] &&
-                    lon >= region.lonRange[0] && lon <= region.lonRange[1]) {
-                    return region.name;
-                }
+                    lon >= region.lonRange[0] && lon <= region.lonRange[1]) return region.name;
             }
             return "Unknown Area";
         }
 
-        function displayData() {
+        function sendData() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((position) => {
                     const latitude = position.coords.latitude;
@@ -36,26 +37,34 @@
                     const timestamp = new Date().toISOString();
                     const region = findRegion(latitude, longitude);
 
-                    const result = {
+                    const payload = {
                         ...productDetails,
-                        Timestamp: timestamp,
                         Latitude: latitude,
                         Longitude: longitude,
+                        Timestamp: timestamp,
                         Region: region
                     };
 
-                    // Display data
-                    document.body.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                    // Send data to Power Automate
+                    fetch("YOUR_POWER_AUTOMATE_URL", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        document.body.innerHTML = "<h2>Data Sent Successfully!</h2>";
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        document.body.innerHTML = "<h2>Error Sending Data</h2>";
+                    });
                 });
             } else {
                 alert("Geolocation is not supported by this browser.");
             }
         }
 
-        window.onload = displayData;
+        window.onload = sendData;
     </script>
-</head>
-<body>
-    <h1>Fetching Data...</h1>
 </body>
 </html>
