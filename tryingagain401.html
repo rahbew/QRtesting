@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory</title>
+    <title>Send Data to Excel</title>
+</head>
+<body>
+    <h1>Sending Data to Excel...</h1>
+
     <script>
         const productDetailsFixed = {
-            ProductNumber: 1234,
-            SerialNumber: 1222,
-            ProductName: "ASDF",
+            ProductNumber: "1234",
+            SerialNumber: "5678",
+            ProductName: "Example Product"
         };
 
         const regionMappings = [
@@ -20,52 +24,13 @@
 
         function findRegionName(latitude, longitude) {
             for (const region of regionMappings) {
-                if (
-                    latitude >= region.latRange[0] &&
-                    latitude <= region.latRange[1] &&
-                    longitude >= region.lonRange[0] &&
-                    longitude <= region.lonRange[1]
-                ) {
+                if (latitude >= region.latRange[0] && latitude <= region.latRange[1] &&
+                    longitude >= region.lonRange[0] && longitude <= region.lonRange[1]) {
                     return region.name;
                 }
             }
             return "Unknown Area";
         }
 
-        function generateJSON() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-                        const timestamp = new Date().toISOString();
-                        const region = findRegionName(latitude, longitude);
-
-                        const jsonData = {
-                            ProductNumber: productDetailsFixed.ProductNumber,
-                            SerialNumber: productDetailsFixed.SerialNumber,
-                            ProductName: productDetailsFixed.ProductName,
-                            Timestamp: timestamp,
-                            Latitude: latitude,
-                            Longitude: longitude,
-                            Region: region
-                        };
-
-                        // Output the JSON data as a JSON response on the webpage
-                        document.body.innerHTML = "<pre>" + JSON.stringify(jsonData, null, 2) + "</pre>";
-                    },
-                    (error) => {
-                        alert("Unable to fetch geolocation data.");
-                    }
-                );
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-
-        window.onload = generateJSON;
-    </script>
-</head>
-<body>
-</body>
-</html>
+        function sendDataToPowerAutomate(data) {
+            const flowURL = "
