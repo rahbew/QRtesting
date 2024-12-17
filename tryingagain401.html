@@ -32,21 +32,7 @@
             return "Unknown Area";
         }
 
-        function returnDataAsJSON(productDetails) {
-            const data = {
-                ProductNumber: productDetails.ProductNumber,
-                SerialNumber: productDetails.SerialNumber,
-                ProductName: productDetails.ProductName,
-                Timestamp: productDetails.Timestamp,
-                Latitude: productDetails.Latitude || "N/A",
-                Longitude: productDetails.Longitude || "N/A",
-                Region: productDetails.Region || "N/A"
-            };
-            // Output as JSON
-            document.body.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
-        }
-
-        function fetchAndDisplayData() {
+        function generateJSON() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -55,8 +41,7 @@
                         const timestamp = new Date().toISOString();
                         const region = findRegionName(latitude, longitude);
 
-                        // Prepare product data with dynamic geolocation and timestamp
-                        const productDetails = {
+                        const jsonData = {
                             ProductNumber: productDetailsFixed.ProductNumber,
                             SerialNumber: productDetailsFixed.SerialNumber,
                             ProductName: productDetailsFixed.ProductName,
@@ -66,11 +51,11 @@
                             Region: region
                         };
 
-                        // Output as structured JSON for easy parsing
-                        returnDataAsJSON(productDetails);
+                        // Output the JSON data as a JSON response on the webpage
+                        document.body.innerHTML = "<pre>" + JSON.stringify(jsonData, null, 2) + "</pre>";
                     },
                     (error) => {
-                        alert("Unable to fetch geolocation data. Please enable GPS and refresh the page.");
+                        alert("Unable to fetch geolocation data.");
                     }
                 );
             } else {
@@ -78,11 +63,7 @@
             }
         }
 
-        function initializePage() {
-            fetchAndDisplayData();
-        }
-
-        window.onload = initializePage;
+        window.onload = generateJSON;
     </script>
 </head>
 <body>
