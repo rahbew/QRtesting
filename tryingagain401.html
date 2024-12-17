@@ -3,95 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Data to Excel</title>
+    <title>Inventory Data</title>
 </head>
 <body>
-    <h1>Uploading Data to OneDrive...</h1>
-    <p>Geolocation is being fetched, and the file will be uploaded shortly.</p>
+    <h1>Inventory Data</h1>
+    <table id="data-table" border="1">
+        <tr>
+            <th>Product Number</th>
+            <th>Serial Number</th>
+            <th>Product Name</th>
+            <th>Timestamp</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Region</th>
+        </tr>
+        <tr>
+            <td>1234</td>
+            <td>5678</td>
+            <td>Example Product</td>
+            <td id="timestamp"></td>
+            <td id="latitude"></td>
+            <td id="longitude"></td>
+            <td id="region"></td>
+        </tr>
+    </table>
 
     <script>
-        const productDetailsFixed = {
-            ProductNumber: "1234",
-            SerialNumber: "5678",
-            ProductName: "Example Product"
-        };
-
-        const regionMappings = [
-            { name: "Dresden, Germany", latRange: [50.0, 52.0], lonRange: [12.0, 14.5] },
-            { name: "Woodlands, Singapore", latRange: [1.2, 1.6], lonRange: [103.5, 104.0] },
-            { name: "Beaverton, USA", latRange: [45.0, 46.0], lonRange: [-123.5, -122.0] },
-            { name: "Taiwan", latRange: [22.0, 26.0], lonRange: [119.0, 123.0] }
+        // Region Mapping
+        const regions = [
+            { name: "Dresden, Germany", lat: [50, 52], lon: [12, 14.5] },
+            { name: "Woodlands, Singapore", lat: [1.2, 1.6], lon: [103.5, 104] },
+            { name: "Beaverton, USA", lat: [45, 46], lon: [-123.5, -122] },
+            { name: "Taiwan", lat: [22, 26], lon: [119, 123] }
         ];
 
-        function findRegionName(latitude, longitude) {
-            for (const region of regionMappings) {
-                if (latitude >= region.latRange[0] && latitude <= region.latRange[1] &&
-                    longitude >= region.lonRange[0] && longitude <= region.lonRange[1]) {
-                    return region.name;
-                }
+        function findRegion(lat, lon) {
+            for (let r of regions) {
+                if (lat >= r.lat[0] && lat <= r.lat[1] && lon >= r.lon[0] && lon <= r.lon[1]) return r.name;
             }
             return "Unknown Area";
         }
 
-        function generateCSV(data) {
-            return [
-                ["Product Number", "Serial Number", "Product Name", "Timestamp", "Latitude", "Longitude", "Region"],
-                [data.ProductNumber, data.SerialNumber, data.ProductName, data.Timestamp, data.Latitude, data.Longitude, data.Region]
-            ].map(row => row.join(",")).join("\n");
-        }
+        // Fetch geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const time = new Date().toISOString();
 
-        async function uploadToOneDrive(csvData, fileName) {
-            const accessToken = "YOUR_ACCESS_TOKEN"; // Replace with your Microsoft Graph API access token
-            const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${fileName}:/content`;
-
-            const response = await fetch(uploadUrl, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${accessToken}`,
-                    "Content-Type": "text/csv"
-                },
-                body: csvData
+                document.getElementById("latitude").textContent = lat;
+                document.getElementById("longitude").textContent = lon;
+                document.getElementById("timestamp").textContent = time;
+                document.getElementById("region").textContent = findRegion(lat, lon);
             });
-
-            if (response.ok) {
-                document.body.innerHTML = "<h2>Data uploaded to OneDrive successfully!</h2>";
-            } else {
-                document.body.innerHTML = "<h2>Error uploading file. Check your access token and permissions.</h2>";
-                console.error("Upload Error:", await response.text());
-            }
         }
-
-        function fetchAndUploadData() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const timestamp = new Date().toISOString();
-                    const region = findRegionName(latitude, longitude);
-
-                    const exportData = {
-                        ProductNumber: productDetailsFixed.ProductNumber,
-                        SerialNumber: productDetailsFixed.SerialNumber,
-                        ProductName: productDetailsFixed.ProductName,
-                        Timestamp: timestamp,
-                        Latitude: latitude,
-                        Longitude: longitude,
-                        Region: region
-                    };
-
-                    const csvData = generateCSV(exportData);
-                    const fileName = `inventory_data_${timestamp.replace(/[:.]/g, "-")}.csv`;
-
-                    await uploadToOneDrive(csvData, fileName);
-                }, () => {
-                    alert("Please allow location access to proceed.");
-                });
-            } else {
-                alert("Geolocation is not supported in this browser.");
-            }
-        }
-
-        window.onload = fetchAndUploadData;
     </script>
 </body>
 </html>
